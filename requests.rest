@@ -1,0 +1,79 @@
+###
+localhost:5000
+
+###
+GET localhost:5000/venues
+
+###
+GET localhost:5000/venues/<int:venue_id>
+
+###
+POST localhost:5000/venues/search
+Content-Type: application/json
+{
+    
+}
+
+###
+GET localhost:5000/venues/create
+
+###
+POST localhost:5000/venues/create
+Content-Type: application/json
+{
+    
+}
+
+###
+DELETE localhost:5000/venues/<venue_id>
+
+###
+localhost:5000/artists
+
+###
+POST localhost:5000/artists/search
+Content-Type: application/json
+{
+    
+}
+
+###
+GET localhost:5000/artists/<int:artist_id>
+
+###
+GET localhost:5000/artists/<int:artist_id>/edit
+
+###
+POST localhost:5000/artists/<int:artist_id>/edit
+Content-Type: application/json
+{
+    
+}
+###
+GET localhost:5000/venues/<int:venue_id>/edit
+
+###
+POST localhost:5000/venues/<int:venue_id>/edit
+Content-Type: application/json
+{
+    
+}
+###
+GET localhost:5000/artists/create
+
+###
+POST localhost:5000/artists/create
+Content-Type: application/json
+{
+    
+}
+###
+GET localhost:5000/shows
+###
+GET localhost:5000/shows/create
+###
+POST localhost:5000/shows/create
+Content-Type: application/json
+{
+    
+}
