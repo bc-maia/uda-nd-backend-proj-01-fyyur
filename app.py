@@ -320,7 +320,30 @@ def delete_venue(venue_id):
 
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+    error = False
+    data = {}
+    try:
+        venue = Venue.query.get(venue_id)
+        if venue:
+            data["name"] = venue.name
+        db.session.delete(venue)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    # on successful db insert, flash success
+    if error:
+        flash(f"An error occurred. Venue could not be listed.")
+    else:
+        flash(f"Venue '{data['name']}' was successfully removed!")
+    # DONE: on unsuccessful db insert, flash an error instead.
+    # e.g.,
+    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    return render_template("pages/home.html")
 
 
 #  Artists
@@ -564,6 +587,39 @@ def create_artist_submission():
     return render_template("pages/home.html")
 
 
+@app.route("/artists/<artist_id>", methods=["DELETE"])
+def delete_artist(artist_id):
+    # TODO: Complete this endpoint for taking a artist_id, and using
+    # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+
+    # BONUS CHALLENGE: Implement a button to delete a Artist on an Artist Page, have it so that
+    # clicking that button delete it from the db then redirect the user to the homepage
+    error = False
+    data = {}
+    try:
+        artist = Artist.query.get(artist_id)
+        if artist:
+            data["name"] = artist.name
+        db.session.delete(artist)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    # on successful db insert, flash success
+    if error:
+        flash(f"An error occurred. Artist could not be listed.")
+    else:
+        flash(f"Artist '{data['name']}' was successfully removed!")
+    # DONE: on unsuccessful db insert, flash an error instead.
+    # e.g.,
+    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    return render_template("pages/home.html")
+
+
 #  Shows
 #  ----------------------------------------------------------------
 
@@ -636,6 +692,20 @@ def create_show_submission():
     # e.g., flash('An error occurred. Show could not be listed.')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     return render_template("pages/home.html")
+
+
+@app.route("/shows/<show_id>", methods=["DELETE"])
+def delete_show(show_id):
+    # TODO: Complete this endpoint for taking a show_id, and using
+    # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+
+    # BONUS CHALLENGE: Implement a button to delete a Show on a Show Page, have it so that
+    # clicking that button delete it from the db then redirect the user to the homepage
+    return None
+
+
+#  Utils
+#  ----------------------------------------------------------------
 
 
 @app.errorhandler(404)
