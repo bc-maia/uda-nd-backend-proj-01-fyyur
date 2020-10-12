@@ -1,13 +1,13 @@
-"""Initial migration.
+"""Initial migration
 
 Revision ID: 737ee39f7589
 Revises: 
-Create Date: 2020-10-11 17:58:49.049503
+Create Date: 2020-10-12 18:30:45.616008
 
 """
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "737ee39f7589"
@@ -22,7 +22,7 @@ def upgrade():
         "artist",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=True),
-        sa.Column("genres", sa.String(length=120), nullable=True),
+        sa.Column("genres", postgresql.ARRAY(sa.String()), nullable=True),
         sa.Column("city", sa.String(length=120), nullable=True),
         sa.Column("state", sa.String(length=120), nullable=True),
         sa.Column("phone", sa.String(length=120), nullable=True),
@@ -36,8 +36,8 @@ def upgrade():
     op.create_table(
         "venue",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sa.String(), nullable=True),
-        sa.Column("genres", sa.String(length=120), nullable=True),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("genres", postgresql.ARRAY(sa.String()), nullable=True),
         sa.Column("address", sa.String(length=120), nullable=True),
         sa.Column("city", sa.String(length=120), nullable=True),
         sa.Column("state", sa.String(length=120), nullable=True),
