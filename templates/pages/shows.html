@@ -1,6 +1,11 @@
 {% extends 'layouts/main.html' %}
 {% block title %}Fyyur | Shows{% endblock %}
 {% block content %}
+{% if not shows %}
+<div class="alert alert-info" role="alert">
+    There's no Shows on the road! Maybe you can register them <a href="/shows/create">here</a>.
+</div>
+{% endif %}
 <div class="row shows">
     {%for show in shows %}
     <div class="col-sm-4">

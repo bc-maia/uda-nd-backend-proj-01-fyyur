@@ -2,6 +2,11 @@
 {% block title %}Fyyur | Artists{% endblock %}
 {% block content %}
 <ul class="items">
+	{% if not artists %}
+	<div class="alert alert-info" role="alert">
+		It seems we're out of artists. Maybe you can register them <a href="/artists/create">here</a>.
+	</div>
+	{% endif %}
 	{% for artist in artists %}
 	<li>
 		<a href="/artists/{{ artist.id }}">
