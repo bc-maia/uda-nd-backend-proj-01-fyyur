@@ -275,11 +275,11 @@ def delete_venue(venue_id):
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
     error = False
-    data = {}
+    venue_name = ""
     try:
         venue = Venue.query.get(venue_id)
         if venue:
-            data["name"] = venue.name
+            venue_name = venue.name
         db.session.delete(venue)
         db.session.commit()
     except:
@@ -293,11 +293,11 @@ def delete_venue(venue_id):
     if error:
         flash(f"An error occurred. Venue could not be listed.")
     else:
-        flash(f"Venue '{data['name']}' was successfully removed!")
+        flash(f"Venue '{venue_name}' was successfully removed!")
     # DONE: on unsuccessful db insert, flash an error instead.
     # e.g.,
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    return render_template("pages/home.html")
+    return redirect(url_for("index"))
 
 
 #  Artists
@@ -465,11 +465,11 @@ def delete_artist(artist_id):
     # BONUS CHALLENGE: Implement a button to delete a Artist on an Artist Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
     error = False
-    data = {}
+    artist_name = ""
     try:
         artist = Artist.query.get(artist_id)
         if artist:
-            data["name"] = artist.name
+            artist_name = artist.name
         db.session.delete(artist)
         db.session.commit()
     except:
@@ -483,11 +483,11 @@ def delete_artist(artist_id):
     if error:
         flash(f"An error occurred. Artist could not be listed.")
     else:
-        flash(f"Artist '{data['name']}' was successfully removed!")
+        flash(f"Artist '{artist_name}' was successfully removed!")
     # DONE: on unsuccessful db insert, flash an error instead.
     # e.g.,
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    return render_template("pages/home.html")
+    return redirect(url_for("index"))
 
 
 #  Shows

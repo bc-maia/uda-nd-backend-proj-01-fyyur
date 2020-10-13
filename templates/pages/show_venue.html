@@ -6,6 +6,14 @@
 		<h1 class="monospace">
 			{{ venue.name }}
 		</h1>
+		<h4>
+			<a href="/venue/{{venue.id}}/edit" data-toggle="tooltip" data-placement="bottom" title="Edit Venue">
+				<i class="fas fa-edit"></i></a>
+			<button class="delete-button" data-toggle="tooltip" data-placement="bottom" title="Unsign Venue"
+				onclick="removeVenue()" value={{venue.id}}>
+				<i class="far fa-times-circle"></i>
+			</button>
+		</h4>
 		<p class="subtitle">
 			ID: {{ venue.id }}
 		</p>
@@ -81,4 +89,15 @@
 	</div>
 </section>
 
+<script>
+	const removeVenue = () => {
+		const id = document.getElementsByClassName("delete-button")[0].value;
+		fetch(`/venues/${id}`, {
+			method: "DELETE"
+		})
+			.then((response) => {
+				window.location.href = "/";
+			})
+	}
+</script>
 {% endblock %}
