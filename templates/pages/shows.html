@@ -15,8 +15,26 @@
             <h5><a href="/artists/{{ show.artist_id }}">{{ show.artist_name }}</a></h5>
             <p>playing at</p>
             <h5><a href="/venues/{{ show.venue_id }}">{{ show.venue_name }}</a></h5>
+            <button class="delete-button" data-toggle="tooltip" data-placement="bottom" title="Unsign Show"
+                onclick="removeShow('{{show.id}}')">
+                <i class="far fa-times-circle"></i>
+            </button>
         </div>
     </div>
     {% endfor %}
 </div>
+
+<script>
+    const removeShow = (id) => {
+        const confirmation = confirm("Do you want to cancel the show?");
+
+        if (confirmation) {
+            fetch(`/shows/${id}`, {
+                method: "DELETE"
+            }).then((response) => {
+                window.location.href = "/";
+            })
+        }
+    }
+</script>
 {% endblock %}

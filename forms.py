@@ -3,8 +3,9 @@ from flask_wtf import FlaskForm
 from sqlalchemy.sql.sqltypes import Boolean
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField
 from wtforms.fields.core import BooleanField
-from wtforms.validators import DataRequired, AnyOf, URL
+from wtforms.validators import DataRequired, ValidationError, URL
 from enums import Genres, States
+from re import match
 
 
 class ShowForm(FlaskForm):
@@ -50,7 +51,8 @@ class ArtistForm(FlaskForm):
     )
     phone = StringField(
         # TODO implement validation logic for state
-        "phone"
+        "phone",
+        # validators=[check_phone_format],
     )
     genres = SelectMultipleField(
         # TODO implement enum restriction
@@ -65,6 +67,10 @@ class ArtistForm(FlaskForm):
     seeking_description = StringField(
         "seeking_description", validators=[DataRequired()]
     )
+
+    def check_phone_format(form, field):
+        if match(r"\d{10}", field.data):
+            raise ValidationError("Field must be as the following format: 000-000-000")
 
 
 # TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM

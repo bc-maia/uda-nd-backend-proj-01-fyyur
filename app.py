@@ -329,10 +329,14 @@ def delete_venue(venue_id):
     # clicking that button delete it from the db then redirect the user to the homepage
     error = False
     venue_name = ""
+    shows = None
     try:
         venue = Venue.query.get(venue_id)
         if venue:
+            shows = Show.query.filter_by(venue_id=venue_id).all()
             venue_name = venue.name
+        for s in shows:
+            db.session.delete(s)
         db.session.delete(venue)
         db.session.commit()
     except:
@@ -576,10 +580,14 @@ def delete_artist(artist_id):
     # clicking that button delete it from the db then redirect the user to the homepage
     error = False
     artist_name = ""
+    shows = None
     try:
         artist = Artist.query.get(artist_id)
         if artist:
+            shows = Show.query.filter_by(artist_id=artist_id).all()
             artist_name = artist.name
+        for s in shows:
+            db.session.delete(s)
         db.session.delete(artist)
         db.session.commit()
     except:
@@ -607,48 +615,29 @@ def shows():
     # displays list of shows at /shows
     # TODO: replace with real venues data.
     #       num_shows should be aggregated based on number of upcoming shows per venue.
-    data = [
-        {
-            "venue_id": 1,
-            "venue_name": "The Musical Hop",
-            "artist_id": 4,
-            "artist_name": "Guns N Petals",
-            "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-            "start_time": "2019-05-21T21:30:00.000Z",
-        },
-        {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "artist_id": 5,
-            "artist_name": "Matt Quevedo",
-            "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-            "start_time": "2019-06-15T23:00:00.000Z",
-        },
-        {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "artist_id": 6,
-            "artist_name": "The Wild Sax Band",
-            "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-            "start_time": "2035-04-01T20:00:00.000Z",
-        },
-        {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "artist_id": 6,
-            "artist_name": "The Wild Sax Band",
-            "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-            "start_time": "2035-04-08T20:00:00.000Z",
-        },
-        {
-            "venue_id": 3,
-            "venue_name": "Park Square Live Music & Coffee",
-            "artist_id": 6,
-            "artist_name": "The Wild Sax Band",
-            "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-            "start_time": "2035-04-15T20:00:00.000Z",
-        },
-    ]
+    data = []
+    try:
+        shows = Show.query.all()
+        if shows:
+            for s in shows:
+                venue = Venue.query.get(s.venue_id)
+                artist = Artist.query.get(s.artist_id)
+                data.append(
+                    {
+                        "id": s.id,
+                        "start_time": str(s.start_time),
+                        "venue_id": venue.id,
+                        "venue_name": venue.name,
+                        "artist_id": artist.id,
+                        "artist_name": artist.name,
+                        "artist_image_link": artist.image_link,
+                    }
+                )
+    except:
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
     return render_template("pages/shows.html", shows=data)
 
 
@@ -663,11 +652,33 @@ def create_shows():
 def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
     # TODO: insert form data as a new Show record in the db, instead
-
-    # on successful db insert, flash success
-    flash("Show was successfully listed!")
     # TODO: on unsuccessful db insert, flash an error instead.
     # e.g., flash('An error occurred. Show could not be listed.')
+    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    error = False
+    data = request.form.to_dict()
+    try:
+        show = Show(
+            start_time=data["start_time"],
+            artist_id=data["artist_id"],
+            venue_id=data["venue_id"],
+        )
+        db.session.add(show)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    if error:
+        flash(f"An error occurred. Show could not be listed.")
+    else:
+        # on successful db insert, flash success
+        flash(f"Show was successfully listed!")
+    # TODO: on unsuccessful db insert, flash an error instead.
+    # e.g.,
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     return render_template("pages/home.html")
 
@@ -679,7 +690,29 @@ def delete_show(show_id):
 
     # TODO: BONUS CHALLENGE: Implement a button to delete a Show on a Show Page, have it so that
     # clicking that button delete it from the db then redirect the user to the homepage
-    return None
+
+    error = False
+    try:
+        show = Show.query.get(show_id)
+        if show:
+            db.session.delete(show)
+            db.session.commit()
+    except:
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+
+    # on successful db insert, flash success
+    if error:
+        flash(f"An error occurred. Show could not be canceled.")
+    else:
+        flash(f"Show was successfully canceled!")
+    # TODO: on unsuccessful db insert, flash an error instead.
+    # e.g.,
+    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    return redirect(url_for("index"))
 
 
 #  Utils
