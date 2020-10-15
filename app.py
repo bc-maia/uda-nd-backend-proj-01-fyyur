@@ -7,12 +7,12 @@ import dateutil.parser
 import babel
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_moment import Moment
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.dialects.postgresql import ARRAY
 import logging
 from logging import Formatter, FileHandler
 from forms import *
+from models import Artist, Venue, Show, db
 
 # ----------------------------------------------------------------------------#
 # App Config.
@@ -21,63 +21,11 @@ from forms import *
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object("config")
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
 
 # DONE: connect to a local postgresql database
 
-# ----------------------------------------------------------------------------#
-# Models.
-# ----------------------------------------------------------------------------#
-
-
-class Venue(db.Model):
-    __tablename__ = "venue"
-
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    name = db.Column(db.String, nullable=False)
-    genres = db.Column(ARRAY(db.String))
-    address = db.Column(db.String(120))
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    website = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean)
-    seeking_description = db.Column(db.String(500))
-    image_link = db.Column(db.String(500))
-    shows = db.relationship("Show", backref="venue", lazy=True)
-    # DONE: implement any missing fields, as a database migration using Flask-Migrate
-
-
-class Artist(db.Model):
-    __tablename__ = "artist"
-
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    name = db.Column(db.String)
-    genres = db.Column(ARRAY(db.String))
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    website = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    seeking_venue = db.Column(db.Boolean)
-    seeking_description = db.Column(db.String(500))
-    image_link = db.Column(db.String(500))
-    shows = db.relationship("Show", backref="artist", lazy=True)
-    # DONE: implement any missing fields, as a database migration using Flask-Migrate
-
-
-class Show(db.Model):
-    __tablename__ = "show"
-
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False)
-    artist_id = db.Column(db.Integer, db.ForeignKey("artist.id"), nullable=False)
-    venue_id = db.Column(db.Integer, db.ForeignKey("venue.id"), nullable=False)
-
-
-# DONE Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 # ----------------------------------------------------------------------------#
 # Filters.
@@ -182,27 +130,19 @@ def show_venue(venue_id):
             data["seeking_talent"] = venue.seeking_talent
             data["seeking_description"] = venue.seeking_description
             data["image_link"] = venue.image_link
+            data["past_shows_count"] = venue.num_past_shows()
+            data["upcoming_shows_count"] = venue.num_upcoming_shows()
+            data["past_shows"] = []
+            data["upcoming_shows"] = []
 
-            if shows := Show.query.filter_by(venue_id=venue_id).all():
-                data["past_shows"] = []
-                data["upcoming_shows"] = []
-                data["past_shows_count"] = 0
-                data["upcoming_shows_count"] = 0
-                for show in shows:
-                    artist = Artist.query.get(show.artist_id)
-                    show_info = {
-                        "artist_id": artist.id,
-                        "artist_name": artist.name,
-                        "artist_image_link": artist.image_link,
-                        "start_time": str(show.start_time),
-                    }
+            if venue.num_past_shows():
+                for show in venue.get_past_shows():
+                    data["past_shows"].append(show.get_show_info(venue=venue))
 
-                    if show.start_time < datetime.now():
-                        data["past_shows"].append(show_info)
-                        data["past_shows_count"] += 1
-                    else:
-                        data["upcoming_shows"].append(show_info)
-                        data["upcoming_shows_count"] += 1
+            if venue.num_upcoming_shows():
+                for show in venue.get_upcoming_shows():
+                    data["upcoming_shows"].append(show.get_show_info(venue=venue))
+
     except:
         error = True
         print(sys.exc_info())
@@ -349,7 +289,7 @@ def delete_venue(venue_id):
     try:
         venue = Venue.query.get(venue_id)
         if venue:
-            shows = Show.query.filter_by(venue_id=venue_id).all()
+            shows = venue.get_shows()
             venue_name = venue.name
         for s in shows:
             db.session.delete(s)
@@ -441,27 +381,19 @@ def show_artist(artist_id):
             data["seeking_venue"] = artist.seeking_venue
             data["seeking_description"] = artist.seeking_description
             data["image_link"] = artist.image_link
+            data["past_shows_count"] = artist.num_past_shows()
+            data["upcoming_shows_count"] = artist.num_upcoming_shows()
+            data["past_shows"] = []
+            data["upcoming_shows"] = []
 
-            if shows := Show.query.filter_by(artist_id=artist_id).all():
-                data["past_shows"] = []
-                data["upcoming_shows"] = []
-                data["past_shows_count"] = 0
-                data["upcoming_shows_count"] = 0
-                for show in shows:
-                    venue = Venue.query.get(show.venue_id)
-                    show_info = {
-                        "artist_id": artist.id,
-                        "artist_name": artist.name,
-                        "venue_image_link": venue.image_link,
-                        "start_time": str(show.start_time),
-                    }
+            if artist.num_past_shows():
+                for show in artist.get_past_shows():
+                    data["past_shows"].append(show.get_show_info(artist=artist))
 
-                    if show.start_time < datetime.now():
-                        data["past_shows"].append(show_info)
-                        data["past_shows_count"] += 1
-                    else:
-                        data["upcoming_shows"].append(show_info)
-                        data["upcoming_shows_count"] += 1
+            if artist.num_upcoming_shows():
+                for show in artist.get_upcoming_shows():
+                    data["upcoming_shows"].append(show.get_show_info(artist=artist))
+
     except:
         error = True
         print(sys.exc_info())
@@ -609,7 +541,7 @@ def delete_artist(artist_id):
     try:
         artist = Artist.query.get(artist_id)
         if artist:
-            shows = Show.query.filter_by(artist_id=artist_id).all()
+            shows = artist.get_shows()
             artist_name = artist.name
         for s in shows:
             db.session.delete(s)
