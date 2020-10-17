@@ -116,33 +116,28 @@ def show_venue(venue_id):
     data = {}
     error = False
     try:
-        venue = Venue.query.get(venue_id)
+        venue = Venue.query.filter_by(id=venue_id).first_or_404()
         if venue:
-            data["id"] = venue.id
-            data["name"] = venue.name
-            data["genres"] = venue.genres
-            data["address"] = venue.address
-            data["city"] = venue.city
-            data["state"] = venue.state
-            data["phone"] = venue.phone
-            data["website"] = venue.website
-            data["facebook_link"] = venue.facebook_link
-            data["seeking_talent"] = venue.seeking_talent
-            data["seeking_description"] = venue.seeking_description
-            data["image_link"] = venue.image_link
-            data["past_shows_count"] = venue.num_past_shows()
-            data["upcoming_shows_count"] = venue.num_upcoming_shows()
-            data["past_shows"] = []
-            data["upcoming_shows"] = []
-
-            if venue.num_past_shows():
-                for show in venue.get_past_shows():
-                    data["past_shows"].append(show.get_show_info(venue=venue))
-
-            if venue.num_upcoming_shows():
-                for show in venue.get_upcoming_shows():
-                    data["upcoming_shows"].append(show.get_show_info(venue=venue))
-
+            upcoming_shows = venue.get_upcoming_shows()
+            past_shows = venue.get_past_shows()
+            data = {
+                "id": venue.id,
+                "name": venue.name,
+                "genres": venue.genres,
+                "address": venue.address,
+                "city": venue.city,
+                "state": venue.state,
+                "phone": venue.phone,
+                "website": venue.website,
+                "facebook_link": venue.facebook_link,
+                "seeking_talent": venue.seeking_talent,
+                "seeking_description": venue.seeking_description,
+                "image_link": venue.image_link,
+                "upcoming_shows": upcoming_shows,
+                "upcoming_shows_count": len(upcoming_shows),
+                "past_shows": past_shows,
+                "past_shows_count": len(past_shows),
+            }
     except:
         error = True
         print(sys.exc_info())
@@ -368,32 +363,27 @@ def show_artist(artist_id):
     data = {}
     error = False
     try:
-        artist = Artist.query.get(artist_id)
+        artist = Artist.query.filter_by(id=artist_id).first_or_404()
         if artist:
-            data["id"] = artist.id
-            data["name"] = artist.name
-            data["genres"] = artist.genres
-            data["city"] = artist.city
-            data["state"] = artist.state
-            data["phone"] = artist.phone
-            data["website"] = artist.website
-            data["facebook_link"] = artist.facebook_link
-            data["seeking_venue"] = artist.seeking_venue
-            data["seeking_description"] = artist.seeking_description
-            data["image_link"] = artist.image_link
-            data["past_shows_count"] = artist.num_past_shows()
-            data["upcoming_shows_count"] = artist.num_upcoming_shows()
-            data["past_shows"] = []
-            data["upcoming_shows"] = []
-
-            if artist.num_past_shows():
-                for show in artist.get_past_shows():
-                    data["past_shows"].append(show.get_show_info(artist=artist))
-
-            if artist.num_upcoming_shows():
-                for show in artist.get_upcoming_shows():
-                    data["upcoming_shows"].append(show.get_show_info(artist=artist))
-
+            upcoming_shows = artist.get_upcoming_shows()
+            past_shows = artist.get_past_shows()
+            data = {
+                "id": artist.id,
+                "name": artist.name,
+                "genres": artist.genres,
+                "city": artist.city,
+                "state": artist.state,
+                "phone": artist.phone,
+                "website": artist.website,
+                "facebook_link": artist.facebook_link,
+                "seeking_venue": artist.seeking_venue,
+                "seeking_description": artist.seeking_description,
+                "image_link": artist.image_link,
+                "upcoming_shows": upcoming_shows,
+                "upcoming_shows_count": len(upcoming_shows),
+                "past_shows": past_shows,
+                "past_shows_count": len(past_shows),
+            }
     except:
         error = True
         print(sys.exc_info())

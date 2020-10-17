@@ -17,20 +17,6 @@ class Show(db.Model):
     artist_id = db.Column(db.Integer, db.ForeignKey("artist.id"), nullable=False)
     venue_id = db.Column(db.Integer, db.ForeignKey("venue.id"), nullable=False)
 
-    def get_show_info(self, artist=None, venue=None):
-        self.artist = artist if artist else Artist.query.get(self.artist_id)
-        data = {
-            "artist_id": self.artist.id,
-            "artist_name": self.artist.name,
-            "artist_image_link": self.artist.image_link,
-            "start_time": str(self.start_time),
-        }
-        if not venue:
-            venue = venue if venue else Venue.query.get(self.venue_id)
-            data["venue_image_link"] = venue.image_link
-
-        return data
-
 
 class Venue(db.Model):
     __tablename__ = "venue"
@@ -50,31 +36,33 @@ class Venue(db.Model):
     shows = db.relationship("Show", backref="venue", lazy=True)
     # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
-    def num_upcoming_shows(self):
-        return (
-            self.query.join(Show)
-            .filter_by(venue_id=self.id)
-            .filter(Show.start_time > datetime.now())
-            .count()
+    def get_upcoming_shows(self) -> list:
+        shows = (
+            db.session.query(Artist, Show)
+            .join(Show)
+            .join(Venue)
+            .filter(
+                Show.venue_id == self.id,
+                Show.artist_id == Artist.id,
+                Show.start_time > datetime.now(),
+            )
+            .all()
         )
+        return formatted_shows(shows)
 
-    def get_upcoming_shows(self):
-        return Show.query.filter_by(venue_id=self.id).filter(
-            Show.start_time > datetime.now()
+    def get_past_shows(self) -> list:
+        shows = (
+            db.session.query(Artist, Show)
+            .join(Show)
+            .join(Venue)
+            .filter(
+                Show.venue_id == self.id,
+                Show.artist_id == Artist.id,
+                Show.start_time < datetime.now(),
+            )
+            .all()
         )
-
-    def num_past_shows(self):
-        return (
-            self.query.join(Show)
-            .filter_by(venue_id=self.id)
-            .filter(Show.start_time < datetime.now())
-            .count()
-        )
-
-    def get_past_shows(self):
-        return Show.query.filter_by(venue_id=self.id).filter(
-            Show.start_time < datetime.now()
-        )
+        return formatted_shows(shows)
 
     def get_shows(self):
         return Show.query.filter_by(venue_id=self.id).all()
@@ -97,34 +85,54 @@ class Artist(db.Model):
     shows = db.relationship("Show", backref="artist", lazy=True)
     # DONE: implement any missing fields, as a database migration using Flask-Migrate
 
-    def num_upcoming_shows(self):
-        return (
-            self.query.join(Show)
-            .filter_by(artist_id=self.id)
-            .filter(Show.start_time > datetime.now())
-            .count()
+    def get_upcoming_shows(self) -> list:
+        shows = (
+            db.session.query(Artist, Show)
+            .join(Show)
+            .join(Venue)
+            .filter(
+                Show.venue_id == Venue.id,
+                Show.artist_id == self.id,
+                Show.start_time > datetime.now(),
+            )
+            .all()
         )
+        return formatted_shows(shows, venue_img=True)
 
-    def get_upcoming_shows(self):
-        return Show.query.filter_by(artist_id=self.id).filter(
-            Show.start_time > datetime.now()
+    def get_past_shows(self) -> list:
+        shows = (
+            db.session.query(Artist, Show)
+            .join(Show)
+            .join(Venue)
+            .filter(
+                Show.venue_id == Venue.id,
+                Show.artist_id == self.id,
+                Show.start_time < datetime.now(),
+            )
+            .all()
         )
-
-    def num_past_shows(self):
-        return (
-            self.query.join(Show)
-            .filter_by(artist_id=self.id)
-            .filter(Show.start_time < datetime.now())
-            .count()
-        )
-
-    def get_past_shows(self):
-        return Show.query.filter_by(artist_id=self.id).filter(
-            Show.start_time < datetime.now()
-        )
+        return formatted_shows(shows, venue_img=True)
 
     def get_shows(self):
         return Show.query.filter_by(artist_id=self.id).all()
+
+
+def formatted_shows(shows: list, venue_img=False) -> list:
+    data = []
+    for artist, show in shows:
+        event = {
+            "artist_id": artist.id,
+            "artist_name": artist.name,
+            "start_time": str(show.start_time),
+        }
+        if venue_img:
+            event["venue_image_link"] = show.venue.image_link
+        else:
+            event["artist_image_link"] = artist.image_link
+
+        data.append(event)
+
+    return data
 
 
 # DONE Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
